@@ -3,11 +3,12 @@ import { onMounted, ref } from 'vue';
 import useAPI from '@/composables/useAPI';
 import { useRoute } from 'vue-router';
 import BaseTitle from '@/components/BaseTitle.vue';
+import DifficultyChip from '@/components/DifficultyChip.vue';
 
 const api = useAPI()
 const question = ref(null)
 const route = useRoute()
-const answer= ref([])
+const answers= ref([])
 onMounted(async () => {
   question.value = await api.getQuestion(route.params.id)
 
@@ -35,7 +36,7 @@ const shuffle = (array) => {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     //swap
-    [array[i], array[j]] = [array[j], array[i]];
+    [ array[i], array[j]] = [array[j], array[i]];
   }
 
   return array
@@ -59,6 +60,7 @@ const shuffle = (array) => {
   </div>
 
     </div>
+    <DifficultyChip :difficulty="question.difficulty"></DifficultyChip>
   </div>
 <div v-else class="">
   Loading...
