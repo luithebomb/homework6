@@ -5,25 +5,34 @@ import { useRoute } from 'vue-router';
 import BaseTitle from '@/components/BaseTitle.vue';
 import DifficultyChip from '@/components/DifficultyChip.vue';
 import MainScore from '@/components/MainScore.vue';
+import useScore from '@/composables/useScore';
+import router from '@/router';
 
 const api = useAPI()
 const question = ref(null)
 const route = useRoute()
-const answers= ref([])
+const answers = ref([])
+const { changeScore } = useScore()
+const notification = ref('')
+
+
+
 onMounted(async () => {
   question.value = await api.getQuestion(route.params.id)
 
   answers.value.push({
     id: answers.value.length,
     correct: true,
-    answer: question.value.correct_answer
+    answer: question.value.correct_answer,
+    points: question.value.difficulty === 'easy' ? 10 : question.value.difficulty === 'medium' ? 20 : 30,
   })
 
   question.value.incorrect_answers.map((wrong_answer) => {
     answers.value.push({
       id: answers.value.length,
       correct: false,
-      answer: wrong_answer
+      answer: wrong_answer,
+      points: -5,
     })
 
   })
@@ -43,12 +52,33 @@ const shuffle = (array) => {
   return array
 }
 
+//handle answer choices and award points
+const handleAnswer = (points) => {
+  changeScore(points)
+
+  if (points > 0) {
+    notification.value = 'CORRECT'
+  }
+  else {
+    notification.value = 'INTCORRECT'
+  }
+
+  setTimeout(() => {
+    router.push('/homework6/')
+  }, 1000)
+}
+
 </script>
 
 <template>
 
 <div v-if="question" class="flex h-full w-full flex-col items-center gap-8 p-10">
-<BaseTitle>{{  question.category }} - <MainScore></MainScore></BaseTitle>
+<BaseTitle>
+  <MainScore></MainScore> &nbsp;
+  <span class="font-bold" :class="notification === 'CORRECT' ? 'text-green-500' : 'text-red-500' ">
+    {{ notification }}
+  </span>
+</BaseTitle>
 <!-- {{  question.question  }} -->
 
 <div v-html="question.question" class="text-center text-2x1 font-bold"></div>
@@ -56,6 +86,7 @@ const shuffle = (array) => {
   <div v-for="answer in answers" 
   v-html="answer.answer" 
   :key="answer.id" 
+  @click="handleAnswer(answer.points)"
   class="bg-green-500 flex items-center jsutify-center text-4x1 rounded-leg text-white py-10 px-2">
   
   </div>
